@@ -2,11 +2,11 @@
 // define cave room directions that a user can navigate or shoot
 export const CaveRoomDirections = {
     NORTH: 'north',
-    NORTH_EAST: 'north_east',
-    SOUTH_EAST: 'south_east',
+    NORTHEAST: 'northeast',
+    SOUTHEAST: 'southeast',
     SOUTH: 'south',
-    SOUTH_WEST: 'south_west',
-    NORTH_WEST: 'north_west'
+    SOUTHWEST: 'southwest',
+    NORTHWEST: 'northwest'
 };
 
 export type CaveRoomDirections = typeof CaveRoomDirections[keyof typeof CaveRoomDirections];

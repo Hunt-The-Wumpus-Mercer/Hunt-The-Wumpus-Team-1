@@ -1,6 +1,7 @@
 
 import $ from "jquery";
 import "./style.css";
+import { GameControl } from "./components/game_control/GameControl";
 
 const $app = $("#app");
 $app.html(`
@@ -10,4 +11,6 @@ $app.html(`
 	</div>
 `);
 
-// TODO: Initialize the Wumpus game in the #WumpusGameContainer div.
+const gameControl = new GameControl();
+
+void gameControl.init("#WumpusGameContainer");
