@@ -1,4 +1,4 @@
-import type { CaveRoomDirections } from "../../components/shared/CaveRoomDirections";
+import type { CaveRoomDirections } from "./CaveRoomDirections";
 import type { TriviaChallengeResult } from "./ITriviaGraphics";
 
 export interface IGameControl {
