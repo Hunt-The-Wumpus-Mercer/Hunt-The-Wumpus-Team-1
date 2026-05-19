@@ -3,16 +3,15 @@ import type { CaveRoomDirections } from "../shared/CaveRoomDirections";
 import { Cave } from "../cave/Cave";
 import type { ICave } from "../cave/ICave";
 import { Map } from "../map/Map";
-import type { IMap } from "../map/IMap";
+import { MapObjectType, type IMap } from "../map/IMap";
 import { Player } from "../player/Player";
-import type { IPlayer } from "../player/IPlayer";
+import { PlayerResourceType, type IPlayer } from "../player/IPlayer";
 import { Trivia } from "../trivia/Trivia";
 import type { ITrivia } from "../trivia/ITrivia";
 import { TriviaGraphics } from "../trivia/TriviaGraphics";
 import {
-    TriviaChallengeResult,
     type ITriviaGraphics,
-    type TriviaChallengeResult as TriviaChallengeOutcome,
+    type TriviaChallengeResult,
 } from "../trivia/ITriviaGraphics";
 import { HighScores } from "../high_scores/HighScores";
 import type { IHighScores } from "../high_scores/IHighScores";
@@ -35,6 +34,8 @@ const DIRECTION_INDEX: Record<CaveRoomDirections, number> = {
     southwest: 4,
     northwest: 5
 };
+
+type ChallengeOutcome = "succeeded" | "failed" | "out_of_coins";
 
 export class GameControl implements IGameControl {
     private cave: ICave | null = null;
@@ -71,9 +72,8 @@ export class GameControl implements IGameControl {
             userAssistance.showInstructions((playerName, caveChoice) => {
                 void (async () => {
                     await cave.loadCave(caveChoice);
-                    map.initialize(cave);
                     player.setPlayerName(playerName);
-                    player.setCoins(2);
+                    player.setResource(PlayerResourceType.COINS, 2);
                     await Promise.all([trivia.initialize(), highScores.load()]);
                     mapHelper.initialize(cave, map);
                     this.cave = cave;
@@ -96,10 +96,13 @@ export class GameControl implements IGameControl {
     async runTriviaChallenge(
         questionCount: number,
         requiredCorrectAnswers: number,
-    ): Promise<TriviaChallengeOutcome> {
-        const result = await this.performTriviaChallenge(questionCount, requiredCorrectAnswers);
-
-        this.refreshGraphicsState(this.getTriviaChallengeStatus(result));
+    ): Promise<TriviaChallengeResult> {
+        const result = await this.requireTriviaGraphics().runChallenge(
+            this.requireTrivia(),
+            questionCount,
+            requiredCorrectAnswers,
+        );
+        this.refreshGraphicsState("Trivia challenge completed.");
         return result;
     }
 
@@ -117,20 +120,20 @@ export class GameControl implements IGameControl {
         const trivia = this.requireTrivia();
         const graphics = this.requireGraphics();
 
-        // Move logic: get destination
-        const currentRoom = map.getPlayerRoom();
-        const adjacentRooms = cave.getAdjacentRooms(currentRoom);
-        const destinationRoom = adjacentRooms[DIRECTION_INDEX[direction]];
+        // Move logic: get destination via connected rooms
+        const currentRoom = map.getRoomLocation(MapObjectType.PLAYER);
+        const connectedRooms = cave.getConnectedRooms(currentRoom);
+        const destinationRoom = connectedRooms[DIRECTION_INDEX[direction]];
 
-        if (destinationRoom === -1) {
+        if (destinationRoom <= 0) {
             return "That direction is a wall.";
         }
 
         // Award a coin (up to 100)
-        let coins = player.getCoins();
+        let coins = player.getResource(PlayerResourceType.COINS);
         if (coins < 100) {
             coins += 1;
-            player.setCoins(coins);
+            player.setResource(PlayerResourceType.COINS, coins);
         }
 
         // Show trivia answer (does not consume a question)
@@ -144,8 +147,8 @@ export class GameControl implements IGameControl {
         graphics.updateSecret(triviaMessage);
 
         // Move the player
-        map.setPlayerRoom(destinationRoom);
-        player.incrementTurns();
+        map.setRoomLocation(MapObjectType.PLAYER, destinationRoom);
+        player.incrementResource(PlayerResourceType.TURNS);
         this.requireSoundManager().playSound(SoundEventType.WALK);
 
         // Check for hazards (bat effect may chain)
@@ -160,13 +163,13 @@ export class GameControl implements IGameControl {
             for (const hazard of hazards) {
                 if (hazard === "wumpus") {
                     const result = await this.performTriviaChallenge(5, 3);
-                    if (result === TriviaChallengeResult.SUCCEEDED) {
+                    if (result === "succeeded") {
                         encounterStatuses.push("You survived the Wumpus encounter.");
                         continue;
                     }
 
                     return this.finishGame(
-                        result === TriviaChallengeResult.OUT_OF_COINS
+                        result === "out_of_coins"
                             ? "You ran out of gold and lost to the Wumpus."
                             : "You failed the Wumpus trivia challenge and lost the game.",
                     );
@@ -174,13 +177,13 @@ export class GameControl implements IGameControl {
 
                 if (hazard === "pit") {
                     const result = await this.performTriviaChallenge(3, 2);
-                    if (result === TriviaChallengeResult.SUCCEEDED) {
+                    if (result === "succeeded") {
                         encounterStatuses.push("You escaped the pit.");
                         continue;
                     }
 
                     return this.finishGame(
-                        result === TriviaChallengeResult.OUT_OF_COINS
+                        result === "out_of_coins"
                             ? "You ran out of gold in the pit and lost the game."
                             : "You failed the pit trivia challenge and lost the game.",
                     );
@@ -215,38 +218,38 @@ export class GameControl implements IGameControl {
         const player = this.requirePlayer();
         const mapHelper = this.requireMapHelper();
 
-        if (player.getArrows() <= 0) {
-            player.incrementTurns();
+        if (player.getResource(PlayerResourceType.ARROWS) <= 0) {
+            player.incrementResource(PlayerResourceType.TURNS);
             return this.finishGame("You ran out of arrows and lost the game.");
         }
 
         this.requireSoundManager().playSound(SoundEventType.SHOOT_ARROW);
 
-        const currentRoom = map.getPlayerRoom();
-        const adjacentRooms = cave.getAdjacentRooms(currentRoom);
-        const targetRoom = adjacentRooms[DIRECTION_INDEX[direction]];
+        const currentRoom = map.getRoomLocation(MapObjectType.PLAYER);
+        const connectedRooms = cave.getConnectedRooms(currentRoom);
+        const targetRoom = connectedRooms[DIRECTION_INDEX[direction]];
 
         // Only allow shooting into adjacent rooms
-        if (targetRoom === -1) {
-            player.setArrows(player.getArrows() - 1);
-            if (player.getArrows() <= 0) {
+        if (targetRoom <= 0) {
+            player.decrementResource(PlayerResourceType.ARROWS);
+            if (player.getResource(PlayerResourceType.ARROWS) <= 0) {
                 return this.finishGame("You ran out of arrows and lost the game.");
             }
             return "Your arrow hit a wall.";
         }
 
         // Win condition: shoot wumpus from adjacent room
-        if (targetRoom === map.getWumpusRoom()) {
-            player.setArrows(player.getArrows() - 1);
-            player.incrementTurns();
+        if (targetRoom === map.getRoomLocation(MapObjectType.WUMPUS)) {
+            player.decrementResource(PlayerResourceType.ARROWS);
+            player.incrementResource(PlayerResourceType.TURNS);
             player.setWumpusKilled();
             return this.finishGame("You win! You killed the Wumpus!", true);
         }
 
         // Miss: lose arrow, wumpus moves up to 2 rooms away
-        player.setArrows(player.getArrows() - 1);
-        player.incrementTurns();
-        if (player.getArrows() <= 0) {
+        player.decrementResource(PlayerResourceType.ARROWS);
+        player.incrementResource(PlayerResourceType.TURNS);
+        if (player.getResource(PlayerResourceType.ARROWS) <= 0) {
             return this.finishGame("You ran out of arrows and lost the game.");
         }
         mapHelper.moveWumpusAfterMiss();
@@ -261,17 +264,17 @@ export class GameControl implements IGameControl {
         }
 
         const player = this.requirePlayer();
-        player.incrementTurns();
+        player.incrementResource(PlayerResourceType.TURNS);
         const result = await this.performTriviaChallenge(3, 2);
-        if (result === TriviaChallengeResult.OUT_OF_COINS) {
+        if (result === "out_of_coins") {
             return this.finishGame("You ran out of gold while trying to buy arrows.");
         }
 
-        if (result !== TriviaChallengeResult.SUCCEEDED) {
+        if (result !== "succeeded") {
             return "You failed the trivia challenge and did not buy arrows.";
         }
 
-        player.setArrows(player.getArrows() + 2);
+        player.incrementResource(PlayerResourceType.ARROWS, 2);
         return "You bought two arrows.";
     };
 
@@ -285,14 +288,14 @@ export class GameControl implements IGameControl {
         const trivia = this.requireTrivia();
         const mapHelper = this.requireMapHelper();
         const graphics = this.requireGraphics();
-        this.requirePlayer().incrementTurns();
+        this.requirePlayer().incrementResource(PlayerResourceType.TURNS);
 
         const result = await this.performTriviaChallenge(3, 2);
-        if (result === TriviaChallengeResult.OUT_OF_COINS) {
+        if (result === "out_of_coins") {
             return this.finishGame("You ran out of gold while trying to buy a secret.");
         }
 
-        if (result !== TriviaChallengeResult.SUCCEEDED) {
+        if (result !== "succeeded") {
             return "You failed the trivia challenge and did not get a secret.";
         }
 
@@ -307,10 +310,7 @@ export class GameControl implements IGameControl {
         const highScores = this.requireHighScores();
         const highScoreGraphics = this.requireHighScoreGraphics();
 
-        highScoreGraphics.show(highScores, {
-            name: player.getPlayerName(),
-            score: player.getScore()
-        });
+        highScoreGraphics.show(highScores, player.getPlayerName(), player.getScore());
 
         const topScore = highScores.getHighScores()[0];
         if (!topScore) {
@@ -352,12 +352,21 @@ export class GameControl implements IGameControl {
     private async performTriviaChallenge(
         questionCount: number,
         requiredCorrectAnswers: number,
-    ): Promise<TriviaChallengeOutcome> {
+    ): Promise<ChallengeOutcome> {
         const trivia = this.requireTrivia();
         const player = this.requirePlayer();
         const triviaGraphics = this.requireTriviaGraphics();
+        const challengeResult = await triviaGraphics.runChallenge(trivia, questionCount, requiredCorrectAnswers);
+        const coinsBefore = player.getResource(PlayerResourceType.COINS);
+        const coinsAfter = coinsBefore - challengeResult.numberOfQuestionsAsked;
 
-        return triviaGraphics.runChallenge(trivia, player, questionCount, requiredCorrectAnswers);
+        player.setResource(PlayerResourceType.COINS, Math.max(0, coinsAfter));
+
+        if (coinsAfter < 0) {
+            return "out_of_coins";
+        }
+
+        return challengeResult.isCorrect ? "succeeded" : "failed";
     }
 
     private refreshGraphicsState(statusMessage?: string): void {
@@ -367,15 +376,15 @@ export class GameControl implements IGameControl {
         const player = this.requirePlayer();
         const mapHelper = this.requireMapHelper();
 
-        const currentRoom = map.getPlayerRoom();
+        const currentRoom = map.getRoomLocation(MapObjectType.PLAYER);
         const warnings = mapHelper.getWarningsNearPlayer();
 
         graphics.updatePlayerName(player.getPlayerName());
-        graphics.updateArrowCount(player.getArrows());
-        graphics.updateCoinCount(player.getCoins());
-        graphics.updateTurnCount(player.getTurns());
+        graphics.updateArrowCount(player.getResource(PlayerResourceType.ARROWS));
+        graphics.updateCoinCount(player.getResource(PlayerResourceType.COINS));
+        graphics.updateTurnCount(player.getResource(PlayerResourceType.TURNS));
         graphics.updateCurrentRoom(currentRoom);
-        graphics.updateRoomExits(cave.getAdjacentRooms(currentRoom));
+        graphics.updateRoomExits(cave.getConnectedRooms(currentRoom));
         graphics.updateWarnings(warnings);
 
         this.playWarningSounds(warnings);
@@ -482,7 +491,7 @@ export class GameControl implements IGameControl {
         };
 
         await highScores.addScore(entry.name, entry.score);
-        highScoreGraphics.show(highScores, entry, () => {
+        highScoreGraphics.show(highScores, entry.name, entry.score, () => {
             window.location.reload();
         });
     }
@@ -506,19 +515,6 @@ export class GameControl implements IGameControl {
             if (normalized.includes("draft") || normalized.includes("pit")) {
                 soundManager.playSound(SoundEventType.WARNING_PIT);
             }
-        }
-    }
-
-    private getTriviaChallengeStatus(result: TriviaChallengeResult): string {
-        switch (result) {
-            case "succeeded":
-                return "You passed the trivia challenge.";
-            case "failed":
-                return "You failed the trivia challenge.";
-            case "out_of_coins":
-                return "You ran out of gold during the trivia challenge.";
-            default:
-                return "Trivia challenge completed.";
         }
     }
 

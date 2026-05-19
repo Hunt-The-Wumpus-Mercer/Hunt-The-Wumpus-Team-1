@@ -44,7 +44,7 @@ export class Graphics implements IGraphics {
         coins: 0,
         turns: 0,
         currentRoom: 0,
-        exits: [-1, -1, -1, -1, -1, -1],
+        exits: [0, 0, 0, 0, 0, 0],
         warnings: [],
         statusMessage: "Welcome to Hunt the Wumpus.",
         secretMessage: "",
@@ -108,7 +108,7 @@ export class Graphics implements IGraphics {
         this.$container.find("[data-role='secret']").text(secret);
     }
 
-    setShootMode(enabled: boolean): void {
+    private setShootMode(enabled: boolean): void {
         this.state.shootMode = enabled;
         this.refreshShootButton();
     }
@@ -188,7 +188,7 @@ export class Graphics implements IGraphics {
 
     private async onDirectionClicked(direction: CaveRoomDirection): Promise<void> {
         const directionIndex = DIRECTION_INDEX[direction];
-        const hasDoorway = this.state.exits[directionIndex] !== -1;
+        const hasDoorway = this.state.exits[directionIndex] > 0;
 
         if (!hasDoorway) {
             this.updateStatusMessage("Solid wall. Choose a doorway.");
@@ -242,7 +242,7 @@ export class Graphics implements IGraphics {
     private refreshRoomButtons(): void {
         for (const direction of DIRECTION_ORDER) {
             const directionIndex = DIRECTION_INDEX[direction];
-            const hasDoorway = this.state.exits[directionIndex] !== -1;
+            const hasDoorway = this.state.exits[directionIndex] > 0;
             const imagePath = this.getImagePath(direction, hasDoorway);
             const $button = this.$container.find(`[data-direction='${direction}']`);
             $button.toggleClass("open", hasDoorway);

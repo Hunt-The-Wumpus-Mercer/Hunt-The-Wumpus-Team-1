@@ -1,4 +1,4 @@
-import type { IUserAssistance } from "./IUserAssistance";
+import type { IUserAssistance, UserAssistanceTipType } from "./IUserAssistance";
 
 export class UserAssistance implements IUserAssistance {
     showInstructions(onComplete: (playerName: string, caveChoice: string) => void, availableCaves: string[]): void {
@@ -47,5 +47,13 @@ export class UserAssistance implements IUserAssistance {
             document.body.removeChild(modal);
             onComplete(playerName, caveChoice);
         };
+    }
+
+    showTip(_tipType: UserAssistanceTipType): void {
+        // Placeholder for future tip UI.
+    }
+
+    showDebugMenu(): void {
+        // Placeholder for future debug menu UI.
     }
 }

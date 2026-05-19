@@ -1,38 +1,22 @@
-import type { ICave } from "../cave/ICave";
+export const MapObjectType = {
+    PLAYER: "player",
+    WUMPUS: "wumpus",
+    BAT1: "bat1",
+    BAT2: "bat2",
+    PIT1: "pit1",
+    PIT2: "pit2",
+} as const;
+
+export type MapObjectType = (typeof MapObjectType)[keyof typeof MapObjectType];
 
 export interface IMap {
     /**
-    * Generates starting locations for bats, pits, the Wumpus, and the player.
+     * Returns the room location for the requested map object.
      */
-    initialize(cave: ICave): void;
+    getRoomLocation(type: MapObjectType): number;
 
     /**
-     * Returns both bat room numbers.
+     * Sets the room location for the requested map object.
      */
-    getBatRooms(): number[];
-
-    /**
-     * Returns both pit room numbers.
-     */
-    getPitRooms(): number[];
-
-    /**
-        * Returns the room number for the Wumpus.
-     */
-    getWumpusRoom(): number;
-
-    /**
-        * Sets the room number for the Wumpus.
-     */
-    setWumpusRoom(roomNumber: number): void;
-
-    /**
-     * Returns the room number for the player.
-     */
-    getPlayerRoom(): number;
-
-    /**
-     * Sets the room number for the player.
-     */
-    setPlayerRoom(roomNumber: number): void;
+    setRoomLocation(type: MapObjectType, roomNumber: number): void;
 }

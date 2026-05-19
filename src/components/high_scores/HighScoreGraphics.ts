@@ -1,5 +1,5 @@
 import $ from "jquery";
-import type { IHighScoreGraphics, HighScoreHighlight } from "./IHighScoreGraphics";
+import type { IHighScoreGraphics } from "./IHighScoreGraphics";
 import type { IHighScores } from "./IHighScores";
 
 export class HighScoreGraphics implements IHighScoreGraphics {
@@ -7,7 +7,7 @@ export class HighScoreGraphics implements IHighScoreGraphics {
     private previouslyFocusedElement: HTMLElement | null = null;
     private onCloseCallback: (() => void) | null = null;
 
-    show(highScores: IHighScores, highlight?: HighScoreHighlight, onClose?: () => void): void {
+    show(highScores: IHighScores, playerName?: string, playerScore?: number, onClose?: () => void): void {
         this.close();
         this.onCloseCallback = onClose ?? null;
         this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
@@ -32,9 +32,10 @@ export class HighScoreGraphics implements IHighScoreGraphics {
         } else {
             for (const entry of scores) {
                 const isHighlight =
-                    highlight !== undefined &&
-                    entry.name === highlight.name &&
-                    entry.score === highlight.score;
+                    playerName !== undefined &&
+                    playerScore !== undefined &&
+                    entry.name === playerName &&
+                    entry.score === playerScore;
 
                 const $item = $("<li>", {
                     class: isHighlight ? "high-score-item high-score-highlight" : "high-score-item"

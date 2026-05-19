@@ -1,13 +1,11 @@
-import type { IPlayer } from "../player/IPlayer";
 import type { ITrivia } from "./ITrivia";
 
-export const TriviaChallengeResult = {
-    SUCCEEDED: "succeeded",
-    FAILED: "failed",
-    OUT_OF_COINS: "out_of_coins"
-} as const;
-
-export type TriviaChallengeResult = typeof TriviaChallengeResult[keyof typeof TriviaChallengeResult];
+export type TriviaChallengeResult = {
+    /** True when required correct answers were achieved. */
+    isCorrect: boolean;
+    /** Number of questions that were shown and answered in this challenge. */
+    numberOfQuestionsAsked: number;
+};
 
 export interface ITriviaGraphics {
     /**
@@ -15,7 +13,6 @@ export interface ITriviaGraphics {
      */
     runChallenge(
         trivia: ITrivia,
-        player: IPlayer,
         questionCount: number,
         requiredCorrectAnswers: number,
     ): Promise<TriviaChallengeResult>;

@@ -3,7 +3,8 @@ import type { IMap } from "./IMap";
 
 export interface IMapHelper {
     /**
-     * Initializes the helper with cave and map dependencies.
+    * Initializes the helper with cave and map dependencies,
+    * including random map object placement.
      */
     initialize(cave: ICave, map: IMap): void;
 

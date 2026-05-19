@@ -1,3 +1,11 @@
+export const PlayerResourceType = {
+    ARROWS: "arrows",
+    COINS: "coins",
+    TURNS: "turns",
+} as const;
+
+export type PlayerResourceType = (typeof PlayerResourceType)[keyof typeof PlayerResourceType];
+
 export interface IPlayer {
     /**
      * Returns the player's name.
@@ -9,35 +17,17 @@ export interface IPlayer {
      */
     setPlayerName(name: string): void;
 
-    /**
-     * Returns the number of arrows the player currently has.
-     */
-    getArrows(): number;
+    /** Returns the current value of the requested resource. */
+    getResource(resource: PlayerResourceType): number;
 
-    /**
-     * Sets the player's number of arrows.
-     */
-    setArrows(arrows: number): void;
+    /** Sets the requested resource value and returns the resulting value. */
+    setResource(resource: PlayerResourceType, value: number): number;
 
-    /**
-     * Returns the number of coins the player currently has.
-     */
-    getCoins(): number;
+    /** Increments the requested resource and returns the resulting value. */
+    incrementResource(resource: PlayerResourceType, amount?: number): number;
 
-    /**
-     * Sets the player's number of coins.
-     */
-    setCoins(coins: number): void;
-
-    /**
-     * Returns the number of turns taken so far.
-     */
-    getTurns(): number;
-
-    /**
-     * Increments turns by 1 and returns the new turn count.
-     */
-    incrementTurns(): number;
+    /** Decrements the requested resource and returns the resulting value. */
+    decrementResource(resource: PlayerResourceType, amount?: number): number;
 
     /**
      * Marks that the player has killed the wumpus.

@@ -5,8 +5,9 @@ const WALL_COUNT = 6;
 
 export class Cave implements ICave {
 
-    // 2D array: rooms[roomNumber] = [wall0, wall1, wall2, wall3, wall4, wall5]
-    // Each wall is either a destination room number or -1 (solid wall).
+    // Raw cave values for each room side.
+    // Positive: connected adjacent room number (1..N).
+    // Zero: no adjacent room / no doorway on that side.
     private rooms: number[][] = [];
 
     async loadCave(caveName: string): Promise<void> {
@@ -24,10 +25,17 @@ export class Cave implements ICave {
         }
 
         this.rooms = lines.map((line, roomIndex) => {
-            const walls = line.split(",").map(s => parseInt(s.trim(), 10));
+            const walls = line.split(",").map((s) => Number.parseInt(s.trim(), 10));
             if (walls.length !== WALL_COUNT) {
                 throw new Error(`Room ${roomIndex} must have exactly ${WALL_COUNT} values, but got ${walls.length}.`);
             }
+
+            for (const value of walls) {
+                if (value < 0 || value > ROOM_COUNT) {
+                    throw new Error(`Invalid cave value ${value} in room ${roomIndex}.`);
+                }
+            }
+
             return walls;
         });
     }
@@ -46,9 +54,20 @@ export class Cave implements ICave {
         if (this.rooms.length === 0) {
             throw new Error("No cave is loaded. Call loadCave() first.");
         }
-        if (roomNumber < 0 || roomNumber >= ROOM_COUNT) {
-            throw new Error(`Room number must be between 0 and ${ROOM_COUNT - 1}.`);
+        if (roomNumber < 1 || roomNumber > ROOM_COUNT) {
+            throw new Error(`Room number must be between 1 and ${ROOM_COUNT}.`);
         }
-        return [...this.rooms[roomNumber]];
+        return [...this.rooms[roomNumber - 1]];
+    }
+
+    getConnectedRooms(roomNumber: number): number[] {
+        if (this.rooms.length === 0) {
+            throw new Error("No cave is loaded. Call loadCave() first.");
+        }
+        if (roomNumber < 1 || roomNumber > ROOM_COUNT) {
+            throw new Error(`Room number must be between 1 and ${ROOM_COUNT}.`);
+        }
+
+        return [...this.rooms[roomNumber - 1]];
     }
 }

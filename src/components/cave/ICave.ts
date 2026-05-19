@@ -1,7 +1,8 @@
 export interface ICave {
     /**
     * Loads cave data from one of the available cave files.
-    * Each room has six exits (or walls), represented as room numbers or -1.
+    * Rooms are numbered from 1..N.
+    * A value of 0 means there is no adjacent room/connection for that side.
      */
     loadCave(caveName: string): Promise<void>;
 
@@ -17,7 +18,13 @@ export interface ICave {
 
     /**
      * Returns six adjacent room entries for the given room.
-     * Each entry is either a destination room number or -1 for a wall.
+     * Each value is a room number in the range 1..N, or 0 when no adjacent room exists.
      */
     getAdjacentRooms(roomNumber: number): number[];
+
+    /**
+     * Returns six connected room entries for the given room,
+     * using 0 where no doorway connection exists.
+     */
+    getConnectedRooms(roomNumber: number): number[];
 }

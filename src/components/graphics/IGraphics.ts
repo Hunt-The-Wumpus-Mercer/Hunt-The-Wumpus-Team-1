@@ -17,8 +17,6 @@ export interface IGraphics {
     updateStatusMessage(message: string): void;
     /** Updates the secret/hint display area. */
     updateSecret(secret: string): void;
-    /** Enables or disables shoot mode in the UI. */
-    setShootMode(enabled: boolean): void;
     /** Forces a full UI redraw from current graphics state. */
     updateScreen(): void;
 }

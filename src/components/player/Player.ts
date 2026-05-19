@@ -1,4 +1,4 @@
-import type { IPlayer } from "./IPlayer";
+import { PlayerResourceType, type IPlayer, type PlayerResourceType as PlayerResourceTypeValue } from "./IPlayer";
 
 const STARTING_ARROWS = 3;
 const STARTING_COINS = 0;
@@ -7,9 +7,11 @@ const WUMPUS_KILL_BONUS = 50;
 
 export class Player implements IPlayer {
     private playerName = "";
-    private arrows = STARTING_ARROWS;
-    private coins = STARTING_COINS;
-    private turns = STARTING_TURNS;
+    private resources: Record<PlayerResourceTypeValue, number> = {
+        [PlayerResourceType.ARROWS]: STARTING_ARROWS,
+        [PlayerResourceType.COINS]: STARTING_COINS,
+        [PlayerResourceType.TURNS]: STARTING_TURNS,
+    };
     private wumpusKilled = false;
 
     getPlayerName(): string {
@@ -20,29 +22,23 @@ export class Player implements IPlayer {
         this.playerName = name;
     }
 
-    getArrows(): number {
-        return this.arrows;
+    getResource(resource: PlayerResourceTypeValue): number {
+        return this.resources[resource];
     }
 
-    setArrows(arrows: number): void {
-        this.arrows = arrows;
+    setResource(resource: PlayerResourceTypeValue, value: number): number {
+        this.resources[resource] = value;
+        return this.resources[resource];
     }
 
-    getCoins(): number {
-        return this.coins;
+    incrementResource(resource: PlayerResourceTypeValue, amount = 1): number {
+        this.resources[resource] += amount;
+        return this.resources[resource];
     }
 
-    setCoins(coins: number): void {
-        this.coins = coins;
-    }
-
-    getTurns(): number {
-        return this.turns;
-    }
-
-    incrementTurns(): number {
-        this.turns += 1;
-        return this.turns;
+    decrementResource(resource: PlayerResourceTypeValue, amount = 1): number {
+        this.resources[resource] -= amount;
+        return this.resources[resource];
     }
 
     setWumpusKilled(): void {
@@ -51,6 +47,9 @@ export class Player implements IPlayer {
 
     getScore(): number {
         const wumpusScore = this.wumpusKilled ? WUMPUS_KILL_BONUS : 0;
-        return 100 - this.turns + this.coins + (5 * this.arrows) + wumpusScore;
+        const turns = this.getResource(PlayerResourceType.TURNS);
+        const coins = this.getResource(PlayerResourceType.COINS);
+        const arrows = this.getResource(PlayerResourceType.ARROWS);
+        return 100 - turns + coins + (5 * arrows) + wumpusScore;
     }
 }

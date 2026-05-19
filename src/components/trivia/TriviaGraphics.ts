@@ -1,20 +1,14 @@
 import $ from "jquery";
-import type { IPlayer } from "../player/IPlayer";
 import type { ITrivia, QuestionPrompt } from "./ITrivia";
-import {
-    TriviaChallengeResult,
-    type ITriviaGraphics,
-    type TriviaChallengeResult as TriviaChallengeOutcome,
-} from "./ITriviaGraphics";
+import type { ITriviaGraphics, TriviaChallengeResult } from "./ITriviaGraphics";
 
 type ChallengeState = {
     trivia: ITrivia;
-    player: IPlayer;
     totalQuestions: number;
     requiredCorrectAnswers: number;
     askedQuestions: number;
     correctAnswers: number;
-    resolve: (result: TriviaChallengeOutcome) => void;
+    resolve: (result: TriviaChallengeResult) => void;
 };
 
 export class TriviaGraphics implements ITriviaGraphics {
@@ -24,10 +18,9 @@ export class TriviaGraphics implements ITriviaGraphics {
 
     runChallenge(
         trivia: ITrivia,
-        player: IPlayer,
         questionCount: number,
         requiredCorrectAnswers: number,
-    ): Promise<TriviaChallengeOutcome> {
+    ): Promise<TriviaChallengeResult> {
         this.validateChallenge(questionCount, requiredCorrectAnswers);
         this.close();
 
@@ -38,7 +31,6 @@ export class TriviaGraphics implements ITriviaGraphics {
         return new Promise((resolve) => {
             this.state = {
                 trivia,
-                player,
                 totalQuestions: questionCount,
                 requiredCorrectAnswers,
                 askedQuestions: 0,
@@ -121,30 +113,21 @@ export class TriviaGraphics implements ITriviaGraphics {
 
     private showNextQuestion(): void {
         const state = this.requireState();
-        if (state.player.getCoins() <= 0) {
-            this.finishChallenge(TriviaChallengeResult.OUT_OF_COINS);
-            return;
-        }
-
         if (state.correctAnswers >= state.requiredCorrectAnswers) {
-            this.finishChallenge(TriviaChallengeResult.SUCCEEDED);
+            this.finishChallenge(true);
             return;
         }
 
         const wrongAnswers = state.askedQuestions - state.correctAnswers;
         const maxWrongAnswers = state.totalQuestions - state.requiredCorrectAnswers;
         if (wrongAnswers > maxWrongAnswers || state.askedQuestions >= state.totalQuestions) {
-            this.finishChallenge(TriviaChallengeResult.FAILED);
+            this.finishChallenge(false);
             return;
         }
 
         const prompt = this.tryGetNextQuestion(state.trivia);
         if (prompt === null) {
-            this.finishChallenge(
-                state.correctAnswers >= state.requiredCorrectAnswers
-                    ? TriviaChallengeResult.SUCCEEDED
-                    : TriviaChallengeResult.FAILED,
-            );
+            this.finishChallenge(state.correctAnswers >= state.requiredCorrectAnswers);
             return;
         }
 
@@ -153,7 +136,6 @@ export class TriviaGraphics implements ITriviaGraphics {
 
     private renderQuestion(prompt: QuestionPrompt): void {
         const state = this.requireState();
-        const player = state.player;
         const $overlay = this.requireOverlay();
         const $progress = $overlay.find("[data-role='trivia-progress']");
         const $coins = $overlay.find("[data-role='trivia-coins']");
@@ -161,14 +143,12 @@ export class TriviaGraphics implements ITriviaGraphics {
         const $feedback = $overlay.find("[data-role='trivia-feedback']");
         const $answers = $overlay.find("[data-role='trivia-answers']");
 
-        player.setCoins(player.getCoins() - 1);
-
         $progress.text(
             `Question ${state.askedQuestions + 1} of ${state.totalQuestions} • Correct ${state.correctAnswers}/${state.requiredCorrectAnswers}`,
         );
-        $coins.text(`Gold coins remaining: ${player.getCoins()}`);
+        $coins.text("Gold coin payment is calculated after the challenge.");
         $question.text(prompt.question);
-        $feedback.text("You paid 1 gold coin to see this question.");
+        $feedback.text("Choose your answer.");
         $answers.empty();
 
         prompt.answers.forEach((answer, index) => {
@@ -202,9 +182,12 @@ export class TriviaGraphics implements ITriviaGraphics {
         this.showNextQuestion();
     }
 
-    private finishChallenge(result: TriviaChallengeOutcome): void {
+    private finishChallenge(isCorrect: boolean): void {
         const state = this.requireState();
-        state.resolve(result);
+        state.resolve({
+            isCorrect,
+            numberOfQuestionsAsked: state.askedQuestions,
+        });
         this.close();
     }
 
