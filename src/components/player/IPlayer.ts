@@ -45,8 +45,8 @@ export interface IPlayer {
     setWumpusKilled(): void;
 
     /**
-     * Returns the current score:
-     * 100 - N + G + (5 * A) + W
+     * Returns the current score using the player's turns, coins, arrows,
+     * and Wumpus kill bonus.
      */
     getScore(): number;
 }

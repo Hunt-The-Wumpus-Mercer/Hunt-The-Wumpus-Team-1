@@ -1,21 +1,21 @@
 export type HighScoreEntry = {
-	name: string;
-	score: number;
+    name: string;
+    score: number;
 };
 
 export interface IHighScores {
-	/**
-	 * Loads the high score list from the known CSV source.
-	 */
-	load(): Promise<void>;
+    /**
+     * Loads high scores from storage into memory.
+     */
+    load(): Promise<void>;
 
-	/**
-	 * Adds a score, sorts descending, keeps top 10, and persists.
-	 */
-	addScore(name: string, score: number): Promise<void>;
+    /**
+     * Adds a score, keeps the list sorted, and persists the updated results.
+     */
+    addScore(name: string, score: number): Promise<void>;
 
-	/**
-	 * Returns the currently loaded high score list.
-	 */
-	getHighScores(): HighScoreEntry[];
+    /**
+     * Returns the current high score list.
+     */
+    getHighScores(): HighScoreEntry[];
 }

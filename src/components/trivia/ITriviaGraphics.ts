@@ -10,6 +10,9 @@ export const TriviaChallengeResult = {
 export type TriviaChallengeResult = typeof TriviaChallengeResult[keyof typeof TriviaChallengeResult];
 
 export interface ITriviaGraphics {
+    /**
+     * Presents a trivia challenge and returns the final outcome.
+     */
     runChallenge(
         trivia: ITrivia,
         player: IPlayer,
@@ -17,5 +20,8 @@ export interface ITriviaGraphics {
         requiredCorrectAnswers: number,
     ): Promise<TriviaChallengeResult>;
 
+    /**
+     * Closes the trivia challenge UI if it is currently open.
+     */
     close(): void;
 }

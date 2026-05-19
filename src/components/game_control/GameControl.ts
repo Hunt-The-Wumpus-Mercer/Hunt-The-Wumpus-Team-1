@@ -68,7 +68,7 @@ export class GameControl implements IGameControl {
 
         // Show tutorial and get user info before starting game
         await new Promise<void>((resolve) => {
-            userAssistance.show_instructions((playerName, caveChoice) => {
+            userAssistance.showInstructions((playerName, caveChoice) => {
                 void (async () => {
                     await cave.loadCave(caveChoice);
                     map.initialize(cave);

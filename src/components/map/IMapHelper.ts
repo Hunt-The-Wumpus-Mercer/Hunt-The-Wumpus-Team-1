@@ -8,17 +8,17 @@ export interface IMapHelper {
     initialize(cave: ICave, map: IMap): void;
 
     /**
-        * Returns hazards in the player's current room.
+     * Returns hazards in the player's current room.
      * Hazard names are "wumpus", "bat", and "pit".
-     * If multiple hazards are present and one is wumpus, wumpus is first.
+     * If wumpus is present, it appears first in the result.
      */
-        getHazardsInPlayerRoom(): string[];
+    getHazardsInPlayerRoom(): string[];
 
     /**
-        * Returns warning messages for hazards in rooms adjacent to the player.
+     * Returns warning messages for hazards in rooms adjacent to the player.
      * Warning messages are unique and may include multiple entries.
      */
-        getWarningsNearPlayer(): string[];
+    getWarningsNearPlayer(): string[];
 
     /**
      * Moves the wumpus after a missed shot to a room up to two moves away.

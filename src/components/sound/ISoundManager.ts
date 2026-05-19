@@ -1,3 +1,6 @@
+/**
+ * Supported one-shot sound events used by game logic.
+ */
 export const SoundEventType = {
     WALK: "walk",
     SHOOT_ARROW: "shoot_arrow",
@@ -12,7 +15,7 @@ export type SoundEventType = (typeof SoundEventType)[keyof typeof SoundEventType
 
 export interface ISoundManager {
     /**
-     * Plays one sound for the specified event.
+     * Plays one sound for the specified event type.
      */
     playSound(soundEventType: SoundEventType): void;
 }

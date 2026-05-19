@@ -2,7 +2,7 @@ import type { ICave } from "../cave/ICave";
 
 export interface IMap {
     /**
-     * Randomly generates starting locations for bats, pits, wumpus, and player.
+    * Generates starting locations for bats, pits, the Wumpus, and the player.
      */
     initialize(cave: ICave): void;
 
@@ -17,12 +17,12 @@ export interface IMap {
     getPitRooms(): number[];
 
     /**
-     * Returns the room number for the wumpus.
+        * Returns the room number for the Wumpus.
      */
     getWumpusRoom(): number;
 
     /**
-     * Sets the room number for the wumpus.
+        * Sets the room number for the Wumpus.
      */
     setWumpusRoom(roomNumber: number): void;
 

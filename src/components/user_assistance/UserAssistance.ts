@@ -1,7 +1,7 @@
-import type { IUser_assistance } from "./IUser_assistance";
+import type { IUserAssistance } from "./IUserAssistance";
 
-export class UserAssistance implements IUser_assistance {
-    show_instructions(onComplete: (playerName: string, caveChoice: string) => void, availableCaves: string[]): void {
+export class UserAssistance implements IUserAssistance {
+    showInstructions(onComplete: (playerName: string, caveChoice: string) => void, availableCaves: string[]): void {
         // Create modal overlay
         const modal = document.createElement("div");
         modal.style.position = "fixed";
