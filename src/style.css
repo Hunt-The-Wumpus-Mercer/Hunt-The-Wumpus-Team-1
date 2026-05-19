@@ -227,3 +227,57 @@ h1 {
     left: 48px;
   }
 }
+
+.high-score-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 12, 12, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.high-score-dialog {
+  width: min(480px, 100%);
+  max-height: 80vh;
+  overflow: auto;
+  background: #fffaf0;
+  border: 1px solid rgba(83, 63, 34, 0.35);
+  border-radius: 0.85rem;
+  padding: 1rem;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+}
+
+.high-score-dialog h2 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+}
+
+.high-score-list {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.high-score-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0.2rem;
+}
+
+.high-score-highlight {
+  background: rgba(250, 220, 120, 0.35);
+  border-radius: 0.35rem;
+}
+
+.high-score-empty {
+  list-style: none;
+  margin-left: -1.5rem;
+  color: #5b4a35;
+}
+
+.high-score-close {
+  margin-bottom: 0;
+}
