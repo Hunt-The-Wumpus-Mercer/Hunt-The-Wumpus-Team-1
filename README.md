@@ -22,16 +22,16 @@ Put code for each of your objects into the `src/components` folder.  You can ref
 
 ## Switching Between Wumpus and ColorPicker
 
-By default, the project runs the Wumpus game. To run the ColorPicker sample instead:
+By default, the project runs the ColorPicker sample. To run the Wumpus game instead:
 
 1. Open `index.html`.
-2. Comment out the Wumpus script tag:
+2. Comment out the ColorPicker script tag:
 	```html
-	<!-- <script type="module" src="/src/wumpusMain.ts"></script> -->
+	<!-- <script type="module" src="/src/colorPickerMain.ts"></script> -->
 	```
-3. Uncomment the ColorPicker script tag:
+3. Uncomment the Wumpus script tag:
 	```html
-	<script type="module" src="/src/colorPickerMain.ts"></script>
+	<script type="module" src="/src/wumpusMain.ts"></script>
 	```
 4. Save and reload the page.
 
