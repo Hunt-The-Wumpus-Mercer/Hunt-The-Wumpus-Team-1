@@ -1,13 +1,10 @@
 export interface IUser_assistance {
-
- /**
-     * make the instructions
-     * @param num1 
-     * @param num2 
-     * @returns 
+    /**
+     * Show the tutorial and collect user info before starting the game.
+     * @param onComplete Callback with playerName and caveChoice
+     * @param availableCaves List of available cave files
      */
-    show_instructions() : void;
-
+    show_instructions(onComplete: (playerName: string, caveChoice: string) => void, availableCaves: string[]): void;
 }
 
 

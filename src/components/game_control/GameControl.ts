@@ -20,8 +20,10 @@ import { HighScoreGraphics } from "../high_scores/HighScoreGraphics";
 import type { IHighScoreGraphics } from "../high_scores/IHighScoreGraphics";
 import { MapHelper } from "../map/MapHelper";
 import type { IMapHelper } from "../map/IMapHelper";
+
 import { Graphics } from "../graphics/Graphics";
 import type { IGraphics } from "../graphics/IGraphics";
+import { UserAssistance } from "../user_assistance/UserAssistance";
 
 const DIRECTION_INDEX: Record<CaveRoomDirections, number> = {
     north: 0,
@@ -54,33 +56,37 @@ export class GameControl implements IGameControl {
         const highScores = new HighScores();
         const highScoreGraphics = new HighScoreGraphics();
         const mapHelper = new MapHelper();
+        const userAssistance = new UserAssistance();
 
         const availableCaves = cave.getAvailableCaves();
         if (availableCaves.length === 0) {
             throw new Error("No cave files are available.");
         }
 
-        await cave.loadCave(availableCaves[0]);
-        map.initialize(cave);
-
-        player.setPlayerName("Hunter One");
-        player.setCoins(2);
-
-        await Promise.all([trivia.initialize(), highScores.load()]);
-
-        mapHelper.initialize(cave, map);
-
-        this.cave = cave;
-        this.map = map;
-        this.player = player;
-        this.trivia = trivia;
-        this.triviaGraphics = triviaGraphics;
-        this.highScores = highScores;
-        this.highScoreGraphics = highScoreGraphics;
-        this.mapHelper = mapHelper;
-        this.graphics = new Graphics(containerSelector, this);
-
-        this.refreshGraphicsState("Walk mode active: click a doorway to move.");
+        // Show tutorial and get user info before starting game
+        await new Promise<void>((resolve) => {
+            userAssistance.show_instructions((playerName, caveChoice) => {
+                void (async () => {
+                    await cave.loadCave(caveChoice);
+                    map.initialize(cave);
+                    player.setPlayerName(playerName);
+                    player.setCoins(2);
+                    await Promise.all([trivia.initialize(), highScores.load()]);
+                    mapHelper.initialize(cave, map);
+                    this.cave = cave;
+                    this.map = map;
+                    this.player = player;
+                    this.trivia = trivia;
+                    this.triviaGraphics = triviaGraphics;
+                    this.highScores = highScores;
+                    this.highScoreGraphics = highScoreGraphics;
+                    this.mapHelper = mapHelper;
+                    this.graphics = new Graphics(containerSelector, this);
+                    this.refreshGraphicsState("Walk mode active: click a doorway to move.");
+                    resolve();
+                })();
+            }, availableCaves);
+        });
     }
 
     async runTriviaChallenge(
