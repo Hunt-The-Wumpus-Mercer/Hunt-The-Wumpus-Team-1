@@ -8,3 +8,5 @@ export const CaveRoomDirections = {
     SOUTH_WEST: 'south_west',
     NORTH_WEST: 'north_west'
 };
+
+export type CaveRoomDirections = typeof CaveRoomDirections[keyof typeof CaveRoomDirections];
