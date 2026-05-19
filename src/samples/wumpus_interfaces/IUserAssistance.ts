@@ -1,15 +1,29 @@
-export type UserAssistanceTipType = {
-    SHOOT_AN_ARROW: 'shoot_an_arrow',
-    MOVE_ROOM: 'move_room'
-};
+export const UserAssistanceTipType = {
+    SHOOT_AN_ARROW: "shoot_an_arrow",
+    MOVE_ROOM: "move_room",
+} as const;
+
+export type UserAssistanceTipType = (typeof UserAssistanceTipType)[keyof typeof UserAssistanceTipType];
 
 export interface IUserAssistance {
-    // displays the instructions UI
-    showInstructions(): void
+    /**
+     * Displays the tutorial/startup UI and collects player name and cave choice.
+     */
+    showInstructions(
+        onComplete: (playerName: string, caveChoice: string) => void,
+        availableCaves: string[],
+    ): void;
 
-    // show a specific tip
-    showTip(tipType: UserAssistanceTipType): void
+    /** Displays a contextual tip UI. */
+    showTip(tipType: UserAssistanceTipType): void;
 
-    // show the debug menu, used for manipulating the game
-    showDebugMenu(): void
+    /** Displays the debug menu UI. */
+    showDebugMenu(): void;
 }
+
+
+
+
+
+
+

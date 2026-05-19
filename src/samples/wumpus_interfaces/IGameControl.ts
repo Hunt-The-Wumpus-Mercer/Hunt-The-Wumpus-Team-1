@@ -1,13 +1,39 @@
-import type { CaveRoomDirections } from '../../components/shared/CaveRoomDirections';
+import type { CaveRoomDirections } from "../../components/shared/CaveRoomDirections";
+import type { TriviaChallengeResult } from "./ITriviaGraphics";
 
 export interface IGameControl {
+    /**
+     * Initializes all game dependencies and renders the game UI.
+     */
+    init(containerSelector: string): Promise<void>;
 
-    // moves the player from their current room to the room in the caveRoomDirection
-    movePlayer(caveRoomDirection: CaveRoomDirections): void
+    /**
+     * Runs a trivia challenge and returns the challenge outcome.
+     */
+    runTriviaChallenge(questionCount: number, requiredCorrectAnswers: number): Promise<TriviaChallengeResult>;
 
-    // shoots an arrow from the player's current room in the caveRoomDirection
-    shootArrow(caveRoomDirection: CaveRoomDirections): void
+    /**
+     * Attempts to move the player one room in the specified direction.
+     */
+    movePlayer(caveRoomDirection: CaveRoomDirections): Promise<string>;
 
-    purchaseArrow(): void
-    purchaseHint(): void
+    /**
+     * Shoots an arrow through the selected doorway direction.
+     */
+    shootArrow(caveRoomDirection: CaveRoomDirections): Promise<string>;
+
+    /**
+     * Attempts to buy arrows by completing a trivia challenge.
+     */
+    purchaseArrow(): Promise<string>;
+
+    /**
+     * Attempts to buy a secret by completing a trivia challenge.
+     */
+    purchaseSecret(): Promise<string>;
+
+    /**
+     * Displays the high scores.
+     */
+    viewHighScores(): Promise<string>;
 }
