@@ -24,6 +24,8 @@ import type { IMapHelper } from "../map/IMapHelper";
 import { Graphics } from "../graphics/Graphics";
 import type { IGraphics } from "../graphics/IGraphics";
 import { UserAssistance } from "../user_assistance/UserAssistance";
+import { SoundManager } from "../sound/SoundManager";
+import { SoundEventType, type ISoundManager } from "../sound/ISoundManager";
 
 const DIRECTION_INDEX: Record<CaveRoomDirections, number> = {
     north: 0,
@@ -44,6 +46,7 @@ export class GameControl implements IGameControl {
     private highScoreGraphics: IHighScoreGraphics | null = null;
     private mapHelper: IMapHelper | null = null;
     private graphics: IGraphics | null = null;
+    private soundManager: ISoundManager | null = null;
     private gameOver = false;
     private gameOverStatus = "";
 
@@ -82,6 +85,7 @@ export class GameControl implements IGameControl {
                     this.highScoreGraphics = highScoreGraphics;
                     this.mapHelper = mapHelper;
                     this.graphics = new Graphics(containerSelector, this);
+                    this.soundManager = new SoundManager(caveChoice);
                     this.refreshGraphicsState("Walk mode active: click a doorway to move.");
                     resolve();
                 })();
@@ -142,6 +146,7 @@ export class GameControl implements IGameControl {
         // Move the player
         map.setPlayerRoom(destinationRoom);
         player.incrementTurns();
+        this.requireSoundManager().playSound(SoundEventType.WALK);
 
         // Check for hazards (bat effect may chain)
         const encounterStatuses: string[] = [];
@@ -214,6 +219,8 @@ export class GameControl implements IGameControl {
             return "You have no more arrows!";
         }
 
+        this.requireSoundManager().playSound(SoundEventType.SHOOT_ARROW);
+
         const currentRoom = map.getPlayerRoom();
         const adjacentRooms = cave.getAdjacentRooms(currentRoom);
         const targetRoom = adjacentRooms[DIRECTION_INDEX[direction]];
@@ -230,9 +237,7 @@ export class GameControl implements IGameControl {
             player.setArrows(player.getArrows() - 1);
             player.incrementTurns();
             player.setWumpusKilled();
-            this.gameOver = true;
-            this.gameOverStatus = "You win! You killed the Wumpus!";
-            return this.gameOverStatus;
+            return this.finishGame("You win! You killed the Wumpus!", true);
         }
 
         // Miss: lose arrow, wumpus moves up to 2 rooms away
@@ -355,6 +360,7 @@ export class GameControl implements IGameControl {
         const mapHelper = this.requireMapHelper();
 
         const currentRoom = map.getPlayerRoom();
+        const warnings = mapHelper.getWarningsNearPlayer();
 
         graphics.updatePlayerName(player.getPlayerName());
         graphics.updateArrowCount(player.getArrows());
@@ -362,7 +368,9 @@ export class GameControl implements IGameControl {
         graphics.updateTurnCount(player.getTurns());
         graphics.updateCurrentRoom(currentRoom);
         graphics.updateRoomExits(cave.getAdjacentRooms(currentRoom));
-        graphics.updateWarnings(mapHelper.getWarningsNearPlayer());
+        graphics.updateWarnings(warnings);
+
+        this.playWarningSounds(warnings);
 
         if (statusMessage !== undefined) {
             graphics.updateStatusMessage(statusMessage);
@@ -432,14 +440,44 @@ export class GameControl implements IGameControl {
         return this.graphics;
     }
 
+    private requireSoundManager(): ISoundManager {
+        if (this.soundManager === null) {
+            throw new Error("GameControl is not initialized. Call init() first.");
+        }
+        return this.soundManager;
+    }
+
     private getBlockedStatus(): string | null {
         return this.gameOver ? this.gameOverStatus : null;
     }
 
-    private finishGame(status: string): string {
+    private finishGame(status: string, isWin = false): string {
         this.gameOver = true;
         this.gameOverStatus = status;
+        this.requireSoundManager().playSound(isWin ? SoundEventType.WIN : SoundEventType.LOSE);
         return status;
+    }
+
+    private playWarningSounds(warnings: string[]): void {
+        const soundManager = this.requireSoundManager();
+
+        for (const warning of warnings) {
+            const normalized = warning.toLowerCase();
+
+            if (normalized.includes("wumpus")) {
+                soundManager.playSound(SoundEventType.WARNING_WUMPUS);
+                continue;
+            }
+
+            if (normalized.includes("bat")) {
+                soundManager.playSound(SoundEventType.WARNING_BAT);
+                continue;
+            }
+
+            if (normalized.includes("draft") || normalized.includes("pit")) {
+                soundManager.playSound(SoundEventType.WARNING_PIT);
+            }
+        }
     }
 
     private getTriviaChallengeStatus(result: TriviaChallengeResult): string {
