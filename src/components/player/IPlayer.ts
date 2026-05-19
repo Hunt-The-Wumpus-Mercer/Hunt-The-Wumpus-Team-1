@@ -20,9 +20,6 @@ export interface IPlayer {
     /** Returns the current value of the requested resource. */
     getResource(resource: PlayerResourceType): number;
 
-    /** Sets the requested resource value and returns the resulting value. */
-    setResource(resource: PlayerResourceType, value: number): number;
-
     /** Increments the requested resource and returns the resulting value. */
     incrementResource(resource: PlayerResourceType, amount?: number): number;
 

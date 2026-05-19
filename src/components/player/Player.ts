@@ -26,11 +26,6 @@ export class Player implements IPlayer {
         return this.resources[resource];
     }
 
-    setResource(resource: PlayerResourceTypeValue, value: number): number {
-        this.resources[resource] = value;
-        return this.resources[resource];
-    }
-
     incrementResource(resource: PlayerResourceTypeValue, amount = 1): number {
         this.resources[resource] += amount;
         return this.resources[resource];

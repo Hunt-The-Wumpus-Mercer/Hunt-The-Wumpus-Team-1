@@ -73,7 +73,7 @@ export class GameControl implements IGameControl {
                 void (async () => {
                     await cave.loadCave(caveChoice);
                     player.setPlayerName(playerName);
-                    player.setResource(PlayerResourceType.COINS, 2);
+                    player.incrementResource(PlayerResourceType.COINS, 2);
                     await Promise.all([trivia.initialize(), highScores.load()]);
                     mapHelper.initialize(cave, map);
                     this.cave = cave;
@@ -130,10 +130,9 @@ export class GameControl implements IGameControl {
         }
 
         // Award a coin (up to 100)
-        let coins = player.getResource(PlayerResourceType.COINS);
+        const coins = player.getResource(PlayerResourceType.COINS);
         if (coins < 100) {
-            coins += 1;
-            player.setResource(PlayerResourceType.COINS, coins);
+            player.incrementResource(PlayerResourceType.COINS);
         }
 
         // Show trivia answer (does not consume a question)
@@ -358,11 +357,13 @@ export class GameControl implements IGameControl {
         const triviaGraphics = this.requireTriviaGraphics();
         const challengeResult = await triviaGraphics.runChallenge(trivia, questionCount, requiredCorrectAnswers);
         const coinsBefore = player.getResource(PlayerResourceType.COINS);
-        const coinsAfter = coinsBefore - challengeResult.numberOfQuestionsAsked;
+        const questionsAsked = challengeResult.numberOfQuestionsAsked;
+        const coinsToSpend = Math.min(coinsBefore, questionsAsked);
+        if (coinsToSpend > 0) {
+            player.decrementResource(PlayerResourceType.COINS, coinsToSpend);
+        }
 
-        player.setResource(PlayerResourceType.COINS, Math.max(0, coinsAfter));
-
-        if (coinsAfter < 0) {
+        if (questionsAsked > coinsBefore) {
             return "out_of_coins";
         }
 
