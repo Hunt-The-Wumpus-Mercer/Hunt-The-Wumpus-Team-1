@@ -17,10 +17,10 @@ export class ColorPicker implements IColorPicker {
     // this stored the spot where we want to add our color tiles
     private $colorTiles!: JQuery;
 
-    // this is wel'll call to complete the promise
+    // this is what we'll call to complete the promise
     private completeThePromise?: (result: ColorPickerResult) => void;
 
-    // this gets calld to initialize the ColorPicker
+    // this gets called to initialize the ColorPicker
     public init($container: JQuery): void {
 
         // save the container we've been given so we can use it in other methods
@@ -70,7 +70,7 @@ export class ColorPicker implements IColorPicker {
         // we're now ready to show the picker
         this.$container.show();
 
-        // we'll now return a 'promise' to the caller, which essentially waits for the user to pick a color.
+        // We'll now return a 'promise' to the caller, which essentially waits for the user to pick a color.
         // When the user does pick a color, we will complete the promise, and the caller will receive the result.
         return new Promise((completeThePromise) => {
             this.completeThePromise = completeThePromise;
@@ -88,10 +88,11 @@ export class ColorPicker implements IColorPicker {
             throw new Error("numColorsToShow must be less than " + colors.length);
         }
 
-        // pick random number between 0 and colors.length for the starting color
+        // Pick random number between 0 and colors.length for the starting color.
+        // This isn't really required, just showing that it's possible to make choices about the UI.
         const startingColorIndex = Math.floor(Math.random() * colors.length);
 
-         // for each color we've been asked to show...
+        // for each color we've been asked to show...
         for (let i = 0; i < numColorsToShow; i++) {
             // Determine the index into our color options based on the starting index and where we are in our loop.
             // Make sure that we our index "wraps" around in case it gets too large.
@@ -113,7 +114,7 @@ export class ColorPicker implements IColorPicker {
         // now that the user has selected a color, we can hide the color picker
         this.$container.hide();
 
-        // and finally, we call our done meethod with the selected color, which will complete the promise
+        // and finally, we call our done method with the selected color, which will complete the promise
         this.done({ selected_color: color })
     }
 
