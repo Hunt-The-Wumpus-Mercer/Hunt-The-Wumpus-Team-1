@@ -216,7 +216,8 @@ export class GameControl implements IGameControl {
         const mapHelper = this.requireMapHelper();
 
         if (player.getArrows() <= 0) {
-            return "You have no more arrows!";
+            player.incrementTurns();
+            return this.finishGame("You ran out of arrows and lost the game.");
         }
 
         this.requireSoundManager().playSound(SoundEventType.SHOOT_ARROW);
@@ -228,7 +229,9 @@ export class GameControl implements IGameControl {
         // Only allow shooting into adjacent rooms
         if (targetRoom === -1) {
             player.setArrows(player.getArrows() - 1);
-            player.incrementTurns();
+            if (player.getArrows() <= 0) {
+                return this.finishGame("You ran out of arrows and lost the game.");
+            }
             return "Your arrow hit a wall.";
         }
 
@@ -243,6 +246,9 @@ export class GameControl implements IGameControl {
         // Miss: lose arrow, wumpus moves up to 2 rooms away
         player.setArrows(player.getArrows() - 1);
         player.incrementTurns();
+        if (player.getArrows() <= 0) {
+            return this.finishGame("You ran out of arrows and lost the game.");
+        }
         mapHelper.moveWumpusAfterMiss();
         return "You missed. The Wumpus moved.";
     };
@@ -255,6 +261,7 @@ export class GameControl implements IGameControl {
         }
 
         const player = this.requirePlayer();
+        player.incrementTurns();
         const result = await this.performTriviaChallenge(3, 2);
         if (result === TriviaChallengeResult.OUT_OF_COINS) {
             return this.finishGame("You ran out of gold while trying to buy arrows.");
@@ -278,6 +285,7 @@ export class GameControl implements IGameControl {
         const trivia = this.requireTrivia();
         const mapHelper = this.requireMapHelper();
         const graphics = this.requireGraphics();
+        this.requirePlayer().incrementTurns();
 
         const result = await this.performTriviaChallenge(3, 2);
         if (result === TriviaChallengeResult.OUT_OF_COINS) {
@@ -451,11 +459,32 @@ export class GameControl implements IGameControl {
         return this.gameOver ? this.gameOverStatus : null;
     }
 
-    private finishGame(status: string, isWin = false): string {
+    private async finishGame(status: string, isWin = false): Promise<string> {
+        if (this.gameOver) {
+            return this.gameOverStatus;
+        }
+
         this.gameOver = true;
         this.gameOverStatus = status;
         this.requireSoundManager().playSound(isWin ? SoundEventType.WIN : SoundEventType.LOSE);
+
+        await this.recordAndDisplayEndGameScores();
         return status;
+    }
+
+    private async recordAndDisplayEndGameScores(): Promise<void> {
+        const player = this.requirePlayer();
+        const highScores = this.requireHighScores();
+        const highScoreGraphics = this.requireHighScoreGraphics();
+        const entry = {
+            name: player.getPlayerName(),
+            score: player.getScore(),
+        };
+
+        await highScores.addScore(entry.name, entry.score);
+        highScoreGraphics.show(highScores, entry, () => {
+            window.location.reload();
+        });
     }
 
     private playWarningSounds(warnings: string[]): void {

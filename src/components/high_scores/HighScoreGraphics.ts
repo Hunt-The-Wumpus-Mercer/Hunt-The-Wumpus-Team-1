@@ -5,9 +5,11 @@ import type { IHighScores } from "./IHighScores";
 export class HighScoreGraphics implements IHighScoreGraphics {
     private $overlay: JQuery<HTMLElement> | null = null;
     private previouslyFocusedElement: HTMLElement | null = null;
+    private onCloseCallback: (() => void) | null = null;
 
-    show(highScores: IHighScores, highlight?: HighScoreHighlight): void {
+    show(highScores: IHighScores, highlight?: HighScoreHighlight, onClose?: () => void): void {
         this.close();
+        this.onCloseCallback = onClose ?? null;
         this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
             ? document.activeElement
             : null;
@@ -114,6 +116,12 @@ export class HighScoreGraphics implements IHighScoreGraphics {
         if (this.previouslyFocusedElement !== null) {
             this.previouslyFocusedElement.focus();
             this.previouslyFocusedElement = null;
+        }
+
+        if (this.onCloseCallback !== null) {
+            const callback = this.onCloseCallback;
+            this.onCloseCallback = null;
+            callback();
         }
     }
 

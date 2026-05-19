@@ -6,6 +6,6 @@ export type HighScoreHighlight = {
 };
 
 export interface IHighScoreGraphics {
-    show(highScores: IHighScores, highlight?: HighScoreHighlight): void;
+    show(highScores: IHighScores, highlight?: HighScoreHighlight, onClose?: () => void): void;
     close(): void;
 }
