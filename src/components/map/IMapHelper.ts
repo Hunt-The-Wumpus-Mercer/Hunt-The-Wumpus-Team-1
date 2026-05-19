@@ -30,4 +30,10 @@ export interface IMapHelper {
      * Returns a secret fact about current map state.
      */
     getSecret(): string;
+
+    /**
+     * Moves the player to a random room after a bat encounter.
+     * Returns the new room number.
+     */
+    movePlayerAfterBatEncounter(excludedRooms?: number[]): number;
 }

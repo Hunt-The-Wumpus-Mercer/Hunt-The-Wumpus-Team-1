@@ -113,6 +113,26 @@ export class MapHelper implements IMapHelper {
         return secrets[this.randomIndex(secrets.length)];
     }
 
+    movePlayerAfterBatEncounter(excludedRooms: number[] = []): number {
+        const cave = this.requireCave();
+        const map = this.requireMap();
+        const currentRoom = map.getPlayerRoom();
+        const excludedRoomSet = new Set<number>([currentRoom, ...excludedRooms]);
+        const allOtherRooms = Array.from({ length: cave.getRoomCount() }, (_, index) => index)
+            .filter((roomNumber) => roomNumber !== currentRoom);
+        const candidateRooms = allOtherRooms.filter((roomNumber) => !excludedRoomSet.has(roomNumber));
+
+        const moveOptions = candidateRooms.length > 0 ? candidateRooms : allOtherRooms;
+
+        if (moveOptions.length === 0) {
+            return currentRoom;
+        }
+
+        const nextRoom = moveOptions[this.randomIndex(moveOptions.length)];
+        map.setPlayerRoom(nextRoom);
+        return nextRoom;
+    }
+
     private getValidAdjacentRooms(cave: ICave, roomNumber: number): number[] {
         const roomCount = cave.getRoomCount();
         const neighbors = cave.getAdjacentRooms(roomNumber);

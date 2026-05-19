@@ -168,25 +168,25 @@ export class Graphics implements IGraphics {
         });
 
         this.$container.on("click", "[data-role='buy-arrow']", () => {
-            this.onPurchaseArrowClicked();
+            void this.onPurchaseArrowClicked();
         });
 
         this.$container.on("click", "[data-role='buy-secret']", () => {
-            this.onPurchaseSecretClicked();
+            void this.onPurchaseSecretClicked();
         });
 
         this.$container.on("click", "[data-role='view-high-scores']", () => {
-            this.onViewHighScoresClicked();
+            void this.onViewHighScoresClicked();
         });
 
         this.$container.on("click", "[data-direction]", (event) => {
             const directionText = String($(event.currentTarget).data("direction"));
             const direction = directionText as CaveRoomDirection;
-            this.onDirectionClicked(direction);
+            void this.onDirectionClicked(direction);
         });
     }
 
-    private onDirectionClicked(direction: CaveRoomDirection): void {
+    private async onDirectionClicked(direction: CaveRoomDirection): Promise<void> {
         const directionIndex = DIRECTION_INDEX[direction];
         const hasDoorway = this.state.exits[directionIndex] !== -1;
 
@@ -196,13 +196,13 @@ export class Graphics implements IGraphics {
         }
 
         if (this.state.shootMode) {
-            const status = this.gameControl.shootArrow(direction);
+            const status = await this.gameControl.shootArrow(direction);
             this.updateStatusMessage(status);
             this.setShootMode(false);
             return;
         }
 
-        const status = this.gameControl.movePlayer(direction);
+        const status = await this.gameControl.movePlayer(direction);
         this.updateStatusMessage(status);
     }
 
@@ -215,18 +215,18 @@ export class Graphics implements IGraphics {
         this.updateStatusMessage("Walk mode active: click a doorway to move.");
     }
 
-    private onPurchaseArrowClicked(): void {
-        const status = this.gameControl.purchaseArrow();
+    private async onPurchaseArrowClicked(): Promise<void> {
+        const status = await this.gameControl.purchaseArrow();
         this.updateStatusMessage(status);
     }
 
-    private onPurchaseSecretClicked(): void {
-        const status = this.gameControl.purchaseSecret();
+    private async onPurchaseSecretClicked(): Promise<void> {
+        const status = await this.gameControl.purchaseSecret();
         this.updateStatusMessage(status);
     }
 
-    private onViewHighScoresClicked(): void {
-        const status = this.gameControl.viewHighScores();
+    private async onViewHighScoresClicked(): Promise<void> {
+        const status = await this.gameControl.viewHighScores();
         this.updateStatusMessage(status);
     }
 
